@@ -312,6 +312,35 @@ class Table:
         """The values behind the table, unformatted, for a DataFrame."""
         return [{c.heading: row.get(c.key) for c in self.columns} for row in self.rows]
 
+    def to_frame(self) -> Any:
+        """A DataFrame that is both readable and sortable.
+
+        Enum columns become *ordered* categoricals rather than integers.
+        pandas coerces an ``IntEnum`` to ``int64``, so a severity column comes
+        out as 0, 3, 1 -- which sorts correctly and tells the reader nothing.
+        An ordered categorical does both: it prints "High warning" and still
+        compares in severity order rather than alphabetically.
+        """
+        import pandas as pd
+
+        frame = pd.DataFrame(self.to_records())
+        for column in self.columns:
+            values = [row.get(column.key) for row in self.rows]
+            members = [v for v in values if isinstance(v, Enum)]
+            if not members or len(members) != len(values):
+                continue
+            kind = type(members[0])
+            try:
+                order = sorted(kind, key=lambda m: m.value)
+            except TypeError:  # pragma: no cover - unorderable enum values
+                order = list(kind)
+            frame[column.heading] = pd.Categorical(
+                [humanise(v) for v in values],
+                categories=[humanise(m) for m in order],
+                ordered=True,
+            )
+        return frame
+
     def _repr_html_(self) -> str:  # pragma: no cover - notebook hook
         return self.to_html()
 

@@ -298,3 +298,36 @@ def test_the_confidence_note_travels_with_the_numbers(scanned: object) -> None:
     text = issue_table(scanned.issues).to_text()
     assert "Detection" in text and "Repair" in text
     assert "Detection confidence is the certainty" in text
+
+
+def test_exported_frames_are_readable_and_still_sort_correctly(scanned: object) -> None:
+    """pandas coerces an IntEnum to int64, so a severity column exports as
+    0, 3, 1 -- which sorts correctly and tells the reader nothing.
+
+    An ordered categorical does both jobs: it prints "High warning" and
+    compares in severity order rather than alphabetically, which is the whole
+    reason not to export the name as a plain string.
+    """
+    frame = scanned.to_frame("findings")
+    assert str(frame["Severity"].dtype) == "category"
+    assert frame["Severity"].cat.ordered
+
+    categories = list(frame["Severity"].cat.categories)
+    assert categories[0] == "Info"
+    assert categories[-1] == "Blocking"
+    assert "High warning" in set(frame["Severity"])
+
+    # Alphabetically "Critical review" precedes "Info"; by severity it does
+    # not. The categorical must sort the second way.
+    present = set(frame["Severity"].dropna())
+    most_severe = max(present, key=categories.index)
+    assert frame["Severity"].max() == most_severe
+    assert most_severe != max(present)  # i.e. not the alphabetical answer
+
+
+def test_numeric_columns_are_left_as_numbers(scanned: object) -> None:
+    """The categorical treatment applies to enums only. Turning a confidence
+    into a category would make it unusable for anything quantitative."""
+    frame = scanned.to_frame("findings")
+    assert pd.api.types.is_float_dtype(frame["Detection"])
+    assert pd.api.types.is_integer_dtype(frame["Rows"])

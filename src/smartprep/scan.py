@@ -250,9 +250,7 @@ class ScanResult:
 
     def to_frame(self, what: str = "findings") -> Any:
         """The same view as a DataFrame, for sorting, filtering and export."""
-        import pandas as pd
-
-        return pd.DataFrame(self.table(what, limit=0).to_records())
+        return self.table(what, limit=0).to_frame()
 
     def _repr_html_(self) -> str:  # pragma: no cover - notebook hook
         from .views import scan_html

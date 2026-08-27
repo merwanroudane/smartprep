@@ -145,9 +145,8 @@ class AuditLog:
         return audit_table(self, applied_only=applied_only)
 
     def to_frame(self, applied_only: bool = False) -> Any:
-        import pandas as pd
-
-        return pd.DataFrame(self.table(applied_only=applied_only).to_records())
+        """The record as a DataFrame."""
+        return self.table(applied_only=applied_only).to_frame()
 
     def _repr_html_(self) -> str:  # pragma: no cover - notebook hook
         return self.table().to_html()

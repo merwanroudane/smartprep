@@ -350,9 +350,8 @@ class PreparationResult:
         return builders[what]()
 
     def to_frame(self, what: str = "audit") -> Any:
-        import pandas as pd
-
-        return pd.DataFrame(self.table(what, limit=0).to_records())
+        """The same view as a DataFrame, for sorting, filtering and export."""
+        return self.table(what, limit=0).to_frame()
 
     def explain(self) -> str:
         """Why the run ended where it did, in prose.

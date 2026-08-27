@@ -66,6 +66,13 @@ named dataclass fields.
 
 - **Severity printed as `5`.** It is an `IntEnum`, so a numeric check caught
   it before the enum formatter did. It reads `Blocking` now.
+- **The same defect survived in `to_frame()`.** pandas coerces an `IntEnum` to
+  `int64`, so an exported severity column came out as 0, 3, 1 -- which sorts
+  correctly and tells the reader nothing. Enum columns now export as *ordered*
+  categoricals: they print `High warning` and still compare in severity order
+  rather than alphabetically, where "Critical review" would precede "Info".
+  Found by running the library against a real 1,210-row ledger, which is where
+  a presentation bug is supposed to be found.
 - **Plain text could crash a Windows terminal.** Box-drawing characters and em
   dashes raise `UnicodeEncodeError` on a cp1252 console. Text output is
   transliterated to ASCII; HTML, Markdown and LaTeX keep the real characters.
