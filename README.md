@@ -2,7 +2,8 @@
 
 [![PyPI](https://img.shields.io/pypi/v/smartprep.svg)](https://pypi.org/project/smartprep/)
 [![Python](https://img.shields.io/pypi/pyversions/smartprep.svg)](https://pypi.org/project/smartprep/)
-[![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
+[![License](https://img.shields.io/pypi/l/smartprep.svg)](LICENSE)
+[![Tests](https://img.shields.io/badge/tests-777-brightgreen.svg)](#testing)
 
 **Intelligent, auditable data preparation for Python.**
 
