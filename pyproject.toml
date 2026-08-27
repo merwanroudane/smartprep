@@ -1,0 +1,151 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "smartprep"
+version = "1.0.1"
+description = "Intelligent, auditable and interactive data preparation for Python"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "Apache-2.0"
+license-files = ["LICENSE", "NOTICE"]
+authors = [{ name = "Merwan Roudane", email = "merwanroudane920@gmail.com" }]
+maintainers = [{ name = "Merwan Roudane", email = "merwanroudane920@gmail.com" }]
+keywords = [
+    "data-cleaning",
+    "data-quality",
+    "data-preparation",
+    "profiling",
+    "validation",
+    "preprocessing",
+    "pandas",
+    "eda",
+    "missing-data",
+    "outlier-detection",
+    "record-linkage",
+    "panel-data",
+    "reproducibility",
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    # No "License :: OSI Approved ::" classifier here on purpose. PEP 639
+    # forbids license classifiers alongside a License-Expression, and this
+    # project declares `license = "Apache-2.0"` above -- PyPI rejects the
+    # upload with a bare 400 when both are present.
+    "Operating System :: OS Independent",
+    "Intended Audience :: Financial and Insurance Industry",
+    "Intended Audience :: Science/Research",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering :: Information Analysis",
+    "Typing :: Typed",
+]
+# scipy is required, not optional: pandas delegates Series.skew() and
+# Series.kurtosis() to it, and the EDA profile computes both for every numeric
+# column. Leaving it undeclared made a clean install crash on profile().
+dependencies = ["pandas>=2.0", "numpy>=1.24", "scipy>=1.10"]
+
+[project.optional-dependencies]
+excel = ["openpyxl>=3.1"]
+# The core draws its own charts with the built-in SVG renderer, so nothing
+# here is needed to produce a report. These add publication-quality figures,
+# genuine interactivity and slide export.
+viz = ["matplotlib>=3.6", "plotly>=5.18"]
+pptx = ["python-pptx>=0.6.21"]
+# Declared so the install surface stays stable for layers still to come; an
+# empty extra is honest, a missing one breaks scripts.
+polars = []
+duckdb = []
+spark = []
+all = ["smartprep[excel,viz,pptx]"]
+dev = [
+    "pytest>=8.0",
+    "pytest-cov>=5.0",
+    "ruff>=0.6",
+    "mypy>=1.11",
+    "openpyxl>=3.1",
+    "build>=1.2",
+    "twine>=5.0",
+    "matplotlib>=3.6",
+    "plotly>=5.18",
+    "python-pptx>=0.6.21",
+    "pypdf>=4.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/merwanroudane/smartprep"
+Repository = "https://github.com/merwanroudane/smartprep"
+Documentation = "https://github.com/merwanroudane/smartprep#readme"
+Issues = "https://github.com/merwanroudane/smartprep/issues"
+Changelog = "https://github.com/merwanroudane/smartprep/blob/main/CHANGELOG.md"
+
+[[tool.mypy.overrides]]
+# scipy ships no type stubs. The dependency is required rather than optional,
+# so silencing the import is the only alternative to leaving four permanent
+# errors that train everyone to ignore the output.
+module = ["scipy.*"]
+ignore_missing_imports = true
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/smartprep"]
+
+[tool.hatch.build.targets.sdist]
+# Ship the source, the tests and the design record. The stress fixture and the
+# planning documents stay out of the distribution -- they are development
+# artefacts, and the workbook alone is 150 KB.
+include = [
+    "src/smartprep",
+    "tests",
+    ".github",
+    "README.md",
+    "LICENSE",
+    "NOTICE",
+    "CHANGELOG.md",
+    "CONTRIBUTING.md",
+    "SECURITY.md",
+    "REFERENCES.md",
+    "CITATION.cff",
+    "_ARCHITECTURE_DECISIONS.md",
+    "_STRESS_TEST_BASELINE.md",
+    "pyproject.toml",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src", "tests"]
+addopts = "-ra --strict-markers"
+markers = [
+    "stress: requires the real stress workbook, which is not distributed",
+    "slow: performance budgets over large frames; excluded from the fast loop",
+]
+
+[tool.ruff]
+line-length = 100
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+
+[tool.ruff.lint.per-file-ignores]
+# The fixture rows are laid out as a fixed-width table. Wrapping them to 100
+# columns would hide the pattern each row is there to demonstrate, which is the
+# only reason the file is readable at all.
+"tests/synthetic.py" = ["E501"]
+
+[[tool.mypy.overrides]]
+# plotly ships no py.typed marker. The exemption is scoped to plotly alone
+# rather than loosening the checker everywhere.
+module = ["plotly.*"]
+ignore_missing_imports = true
+
+[tool.mypy]
+python_version = "3.10"
+packages = ["smartprep"]
+mypy_path = "src"
+strict_optional = true
+warn_unused_ignores = true

@@ -1,0 +1,18 @@
+.venv/
+venv/
+dist/
+build/
+*.egg-info/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+.DS_Store
+
+# The stress-test workbook. Excluded from the sdist as a development
+# artefact, and kept out of the repository too: a public git history is
+# permanent, so data goes in only when it is meant to stay forever.
+data_project.xlsx

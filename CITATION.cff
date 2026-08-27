@@ -1,0 +1,25 @@
+cff-version: 1.2.0
+title: "SmartPrep: Intelligent, Auditable Data Preparation for Python"
+message: "If you use this software, please cite it as below."
+type: software
+authors:
+  - family-names: Roudane
+    given-names: Merwan
+    email: merwanroudane920@gmail.com
+repository-code: "https://github.com/merwanroudane/smartprep"
+url: "https://github.com/merwanroudane/smartprep"
+abstract: >-
+  SmartPrep is a data preparation library for Python that treats cleaning as a
+  decision problem rather than a transformation problem. It separates confidence
+  that a problem exists from confidence in a specific repair, classifies every
+  finding by whether it may be repaired autonomously, and abstains when the
+  correct value is not inferable from the data.
+keywords:
+  - data cleaning
+  - data quality
+  - data preparation
+  - reproducibility
+  - explainability
+license: Apache-2.0
+version: 0.1.0.dev0
+date-released: "2026-08-26"
