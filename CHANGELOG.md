@@ -14,7 +14,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Benchmark suite
 - Documentation site and plugin architecture
 
-## [1.0.2] -- 2026-08-27
+## [1.0.3] -- 2026-08-27
+
+The 1.0.2 artefacts were rejected by PyPI and never published; this is the
+same release under a number the index accepts. Everything below describes the
+work that went into it.
 
 Output built for people. No analytical change.
 

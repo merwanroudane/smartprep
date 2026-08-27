@@ -44,7 +44,7 @@ not be touched at all — and the library says which is which, and why.
 
 ## Status
 
-**v1.0.2.** Diagnosis, safe repair, guided review,
+**v1.0.3.** Diagnosis, safe repair, guided review,
 preprocessing, validation, privacy, drift, EDA, three renderer backends,
 publishing to five formats, and a Studio with one shared interaction state —
 linked brushing, cross-filtering, a visual builder and a treatment sandbox —

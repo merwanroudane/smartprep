@@ -366,7 +366,7 @@ CAPABILITIES: tuple[Capability, ...] = (
         "presentation",
         "Journal-convention tables in text, Markdown, HTML and LaTeX",
         _I,
-        since="1.0.2",
+        since="1.0.3",
         proof="Table",
         caveat=(
             "The view computes nothing: every figure comes from the object it "
