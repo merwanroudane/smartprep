@@ -324,6 +324,72 @@ class PreparationResult:
         """Alias for :meth:`studio`, for notebook use."""
         return self.studio(**kwargs)
 
+    # -- presentation -------------------------------------------------------
+    #
+    # `display`, not `show`: `show()` already opens the Studio on this class
+    # and that is published behaviour. Repurposing a shipped method to mean
+    # something else is the kind of break a major version exists for, and a
+    # table is not worth one.
+
+    def display(self, what: str = "audit", limit: int = 40) -> None:
+        """Print a readable table: audit, applied, declined, health or findings."""
+        print(self.table(what, limit=limit).to_text(max_rows=limit))
+
+    def table(self, what: str = "audit", limit: int = 40) -> Any:
+        from .views import audit_table, declined_table, health_table, issue_table
+
+        builders = {
+            "audit": lambda: audit_table(self.audit),
+            "applied": lambda: audit_table(self.audit, applied_only=True),
+            "declined": lambda: declined_table(self),
+            "health": lambda: health_table(self.health_before, self.health_after),
+            "findings": lambda: issue_table(self.unresolved_issues, limit=limit),
+        }
+        if what not in builders:
+            raise ValueError(f"{what!r} is not a view; choose from {', '.join(sorted(builders))}")
+        return builders[what]()
+
+    def to_frame(self, what: str = "audit") -> Any:
+        import pandas as pd
+
+        return pd.DataFrame(self.table(what, limit=0).to_records())
+
+    def explain(self) -> str:
+        """Why the run ended where it did, in prose.
+
+        The disclosure that makes the rest trustworthy: a tool reporting only
+        its successes leaves its silence to be interpreted, and readers
+        interpret silence as "nothing to see".
+        """
+        from .views import preparation_summary
+
+        lines = [preparation_summary(self), ""]
+        open_issues = self.unresolved_issues
+        if not open_issues:
+            lines.append("Nothing was left open.")
+        else:
+            lines.append(
+                f"{len(open_issues)} findings were left open. Automatic mode "
+                "repairs only what it can justify; the rest is reported."
+            )
+            grouped: dict[str, int] = {}
+            for issue in open_issues:
+                reason = issue.triage()[0]
+                grouped[reason.name] = grouped.get(reason.name, 0) + 1
+            for name, count in sorted(grouped.items(), key=lambda kv: -kv[1]):
+                lines.append(f"  {count:>3}  {name.replace('_', ' ').capitalize()}")
+            lines += [
+                "",
+                "Use guided_prepare() to decide these, or finalize() to accept "
+                "the dataset with the remaining findings waived on the record.",
+            ]
+        return "\n".join(lines)
+
+    def _repr_html_(self) -> str:  # pragma: no cover - notebook hook
+        from .views import preparation_html
+
+        return preparation_html(self)
+
     def summary(self) -> str:
         before, after = self.health_before, self.health_after
         lines = [

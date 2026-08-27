@@ -44,7 +44,7 @@ not be touched at all — and the library says which is which, and why.
 
 ## Status
 
-**v1.0.1.** Diagnosis, safe repair, guided review,
+**v1.0.2.** Diagnosis, safe repair, guided review,
 preprocessing, validation, privacy, drift, EDA, three renderer backends,
 publishing to five formats, and a Studio with one shared interaction state —
 linked brushing, cross-filtering, a visual builder and a treatment sandbox —
@@ -94,6 +94,7 @@ what the current API means.
 | Missingness mechanism evidence (MCAR testing) | **Implemented** |
 | Multivariate and contextual outliers | **Implemented** |
 | Learn validation rules from a trusted sample | **Implemented** |
+| Journal-convention tables in text, Markdown, HTML and LaTeX | **Implemented** |
 | Multi-backend execution | Planned |
 
 This table is generated from `smartprep.capabilities`, and a test fails if it
@@ -314,6 +315,105 @@ exists.
 
 `scan()` copies the frame and asserts equality afterwards. If a detector mutates
 the input, it raises rather than returning a silently corrupted result.
+
+---
+
+## Reading the output
+
+Every result renders as a table rather than a dataclass dump. In a notebook the
+cell output *is* the summary; in a terminal, `.display()` prints it.
+
+```python
+result = sp.scan(df)
+
+result.display("severity")     # findings, severity, columns, categories
+result.to_frame("columns")     # the same view as a DataFrame
+result.table("findings")       # the Table object, for other formats
+```
+
+```text
+Findings by severity
+
+--------------------------------
+Severity         Findings  Share
+--------------------------------
+Blocking                1     3%
+Critical review         6    18%
+High warning           14    41%
+Warning                 7    21%
+--------------------------------
+```
+
+For a preparation run, `explain()` answers the question the status alone
+cannot:
+
+```python
+prepared = sp.auto_prepare(df)
+prepared.display("declined")   # audit, applied, declined, health, findings
+print(prepared.explain())
+```
+
+```text
+Blocked  |  17 cells changed by 12 operations  |  27 findings left open  |  health 70 -> 76
+
+27 findings were left open. Automatic mode repairs only what it can justify;
+the rest is reported.
+   10  Domain rule required
+    7  User confirmation required
+    5  Safe auto fix
+    4  Ambiguous
+    1  Do not touch
+
+Use guided_prepare() to decide these, or finalize() to accept the dataset with
+the remaining findings waived on the record.
+```
+
+### Tables for papers
+
+Four formats from one definition — plain text, Markdown, HTML, and LaTeX with
+`booktabs`:
+
+```python
+table = sp.scan(df).table("columns")
+print(table.to_latex(label="tab:quality"))
+```
+
+```latex
+\begin{tabular}{lrrrr}
+\toprule
+Column & Findings & Worst severity & Rows affected & Auto-fixable \\
+\midrule
+invoice\_date & 5 & High warning & 12 & 2 \\
+\bottomrule
+\end{tabular}
+```
+
+Underscores and percent signs are escaped, so it compiles in your manuscript
+rather than in ours. No `\hline` and no vertical rules — `booktabs` exists to
+prevent exactly those.
+
+The conventions are the ones journals enforce, and they are not house style:
+**horizontal rules only**, because vertical ones add ink without adding
+information; **figures right-aligned**, so the units digit sits under the
+units digit and two numbers can be compared without counting characters; **one
+precision per column**, taken from the quantity rather than the float's
+accidental tail, so `0.9500000000000001` prints as `95%`; and **notes below
+the foot rule**, where a reader looks for what the numbers do not say.
+
+Absence prints as a dash, never a zero. They are different claims.
+
+### The view computes nothing
+
+Every figure in every table came from the object being described. Nothing is
+counted, aggregated or re-derived in the display layer, because a view that
+calculates its own number can disagree with its source — and a reader holding
+two figures has no way to choose between them. Tests assert the agreement
+rather than the docstring claiming it.
+
+The same rule puts **detection and repair confidence side by side** in every
+findings table, with the note that explains them. It is what the library rests
+on, and it used to be visible only to someone who knew to look for two
+similarly named fields in a `repr`.
 
 ---
 
@@ -1419,7 +1519,7 @@ pip install -e ".[dev]"
 pytest
 ```
 
-**739 tests.** 677 of them run anywhere, against a deterministic fixture that
+**775 tests.** 724 of them run anywhere, against a deterministic fixture that
 ships with the package — so the contract described here is one you can execute,
 not one you have to take on trust.
 
@@ -1447,6 +1547,7 @@ not one you have to take on trust.
 | `test_dtypes.py` | Every pandas dtype, and the type map. |
 | `test_learning.py` | Learned rules, and the ones refused. |
 | `test_public_api.py` | The public surface, frozen against accident. |
+| `test_display.py` | Journal-convention tables, and that views compute nothing. |
 | `test_benchmarks.py` | Performance budgets — scaling guards, not a comparative benchmark. Marked `slow`. |
 | `test_baseline_detection.py` | The real 1,210-row workbook. Marked `stress`. |
 
@@ -1454,7 +1555,7 @@ The 51 `stress` tests need a workbook that is not distributed; they skip
 cleanly without it.
 
 ```bash
-pytest -m "not stress"   # what a PyPI install runs: 677 tests
+pytest -m "not stress"   # what a PyPI install runs: 724 tests
 pytest -m stress         # the real-workbook regression suite
 ```
 

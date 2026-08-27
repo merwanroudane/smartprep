@@ -37,6 +37,7 @@ from .core import (
     TreatmentCandidate,
 )
 from .core.identity import StableRowIndex
+from .display import Align, Column, Table, format_number
 from .drift import DriftReport, DriftSeverity, cleaning_drift
 from .drift import compare as compare_reference
 from .eda import (
@@ -100,7 +101,7 @@ from .workflow import (
     default_workflow,
 )
 
-__version__ = "1.0.1"
+__version__ = "1.0.2"
 
 __all__ = [
     # entry points
@@ -189,6 +190,11 @@ __all__ = [
     "CAPABILITIES",
     "Capability",
     "capability_table",
+    # presentation
+    "Table",
+    "Column",
+    "Align",
+    "format_number",
     "publish",
     # validation and contracts
     "ValidationPlan",

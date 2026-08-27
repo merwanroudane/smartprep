@@ -363,6 +363,18 @@ CAPABILITIES: tuple[Capability, ...] = (
         ),
     ),
     Capability(
+        "presentation",
+        "Journal-convention tables in text, Markdown, HTML and LaTeX",
+        _I,
+        since="1.0.2",
+        proof="Table",
+        caveat=(
+            "The view computes nothing: every figure comes from the object it "
+            "describes, and a test asserts the two agree. Plain text is "
+            "transliterated to ASCII so a cp1252 console cannot raise on it."
+        ),
+    ),
+    Capability(
         "multi_backend",
         "Multi-backend execution",
         _P,

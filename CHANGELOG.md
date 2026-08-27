@@ -14,6 +14,70 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Benchmark suite
 - Documentation site and plugin architecture
 
+## [1.0.2] -- 2026-08-27
+
+Output built for people. No analytical change.
+
+### The problem
+
+The core knew everything worth reporting and had no way to say it. A notebook
+cell showed this:
+
+```text
+Issue(id='MISS-STRUCTURAL-payment_date',
+      category=<IssueCategory.STRUCTURAL_MISSINGNESS: 'structural_missingness'>,
+      severity=<Severity.INFO: 0>, rule_source=<RuleSource.INFERRED...
+```
+
+The sentence that mattered -- *"5 of the missing payment_date values occur
+where status is Pending or Overdue; absence is the correct encoding here"* --
+was three lines further in, past two raw enum members.
+
+### Added -- tables to journal convention
+
+`smartprep.display.Table` renders to plain text, Markdown, HTML and **LaTeX
+with booktabs**. The conventions are the ones journals enforce, for reasons
+that outlive any house style: horizontal rules only, figures right-aligned so
+the units digit sits under the units digit, one precision per column chosen
+from the quantity rather than the float's accidental tail, and notes below the
+foot rule.
+
+`0.9500000000000001` prints as `95%`. Absence prints as a dash, because an
+empty cell and a zero are different claims.
+
+### Added -- views on every result
+
+`.display(what)`, `.table(what)`, `.to_frame(what)` and `_repr_html_` on
+`ScanResult`, `PreparationResult` and `AuditLog`, plus `result.explain()` for
+why a run ended where it did. Views by severity, category, column, audit,
+health, and what automatic mode declined.
+
+**The view computes nothing.** Every figure comes from the object it
+describes, and a test asserts the two agree -- a view that derives its own
+count can disagree with its source, and then a reader has two numbers and no
+way to choose.
+
+The detection/repair distinction now appears side by side in every findings
+table, with the note explaining it. It is the rule the library rests on, and
+it was previously visible only to someone who knew to look for two similarly
+named dataclass fields.
+
+### Fixed
+
+- **Severity printed as `5`.** It is an `IntEnum`, so a numeric check caught
+  it before the enum formatter did. It reads `Blocking` now.
+- **Plain text could crash a Windows terminal.** Box-drawing characters and em
+  dashes raise `UnicodeEncodeError` on a cp1252 console. Text output is
+  transliterated to ASCII; HTML, Markdown and LaTeX keep the real characters.
+- `<ScanResult issues=28 coverage=100%>` omitted the two numbers a reader
+  needs to judge whether 28 is a lot. It now reports rows and columns.
+
+### Not changed
+
+`PreparationResult.show()` still opens the Studio. It is published behaviour,
+and repurposing a shipped method is what a major version is for -- a table is
+not worth one. The table view is `.display()`.
+
 ## [1.0.1] -- 2026-08-27
 
 Packaging fix. The 1.0.0 artefacts were rejected by PyPI and never published,

@@ -135,6 +135,29 @@ class AuditLog:
     def to_list(self) -> list[dict[str, Any]]:
         return [r.to_dict() for r in self.records]
 
+    def display(self, applied_only: bool = False, limit: int = 60) -> None:
+        """Print the record as a table. Abstentions included by default."""
+        print(self.table(applied_only=applied_only).to_text(max_rows=limit))
+
+    def table(self, applied_only: bool = False) -> Any:
+        from ..views import audit_table
+
+        return audit_table(self, applied_only=applied_only)
+
+    def to_frame(self, applied_only: bool = False) -> Any:
+        import pandas as pd
+
+        return pd.DataFrame(self.table(applied_only=applied_only).to_records())
+
+    def _repr_html_(self) -> str:  # pragma: no cover - notebook hook
+        return self.table().to_html()
+
+    def __repr__(self) -> str:  # pragma: no cover - display only
+        return (
+            f"<AuditLog {len(self.applied)} applied, {len(self.refused)} declined, "
+            f"{self.cells_changed:,} cells changed>"
+        )
+
     def summary(self) -> str:
         lines = [f"{len(self.applied)} operations applied, {len(self.refused)} refused"]
         for record in self.records:

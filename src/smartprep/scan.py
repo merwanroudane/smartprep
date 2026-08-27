@@ -224,6 +224,47 @@ class ScanResult:
 
         return build(frame)
 
+    # -- presentation -------------------------------------------------------
+    #
+    # These render values this object already holds. They compute nothing:
+    # a view that derived its own counts could disagree with `self`, and a
+    # reader with two numbers has no way to choose between them.
+
+    def display(self, what: str = "findings", limit: int = 25) -> None:
+        """Print a readable table: findings, severity, columns or categories."""
+        print(self.table(what, limit=limit).to_text())
+
+    def table(self, what: str = "findings", limit: int = 25) -> Any:
+        """One of the views, as a :class:`~smartprep.display.Table`."""
+        from .views import category_table, column_table, issue_table, severity_table
+
+        builders = {
+            "findings": lambda: issue_table(self.issues, limit=limit),
+            "severity": lambda: severity_table(self.issues),
+            "columns": lambda: column_table(self),
+            "categories": lambda: category_table(self.issues),
+        }
+        if what not in builders:
+            raise ValueError(f"{what!r} is not a view; choose from {', '.join(sorted(builders))}")
+        return builders[what]()
+
+    def to_frame(self, what: str = "findings") -> Any:
+        """The same view as a DataFrame, for sorting, filtering and export."""
+        import pandas as pd
+
+        return pd.DataFrame(self.table(what, limit=0).to_records())
+
+    def _repr_html_(self) -> str:  # pragma: no cover - notebook hook
+        from .views import scan_html
+
+        return scan_html(self)
+
+    def __repr__(self) -> str:  # pragma: no cover - display only
+        return (
+            f"<ScanResult rows={self.row_count:,} cols={self.column_count} "
+            f"issues={len(self.issues)} coverage={self.coverage:.0%}>"
+        )
+
     def summary(self) -> str:
         counts = Counter(i.repair_class.name for i in self.issues)
         lines = [
@@ -243,9 +284,6 @@ class ScanResult:
         lines += ["", self.health().summary(), ""]
         lines.append("Scan coverage measures checks executed, not data correctness.")
         return "\n".join(lines)
-
-    def __repr__(self) -> str:  # pragma: no cover - display only
-        return f"<ScanResult issues={len(self.issues)} coverage={self.coverage:.0%}>"
 
 
 def _applicability(
